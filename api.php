@@ -88,16 +88,31 @@ foreach ($data['links'] as &$link) {
     if (empty(trim($link['title'])) && !empty($link['url'])) {
         $context = stream_context_create([
             'http' => [
-                'timeout' => 5,
-                'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n"
+                'timeout' => 10,
+                'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36\r\n",
+                'follow_location' => 1,
+                'ignore_errors' => true
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false
             ]
         ]);
         $html = @file_get_contents($link['url'], false, $context);
         if ($html) {
-            if (preg_match('/<title>(.*?)<\/title>/is', $html, $matches)) {
-                $link['title'] = $matches[1];
+            // 正規表現でタイトルタグを抽出（属性があっても対応）
+            if (preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $matches)) {
+                $title = trim($matches[1]);
+                // 文字コードの補正（UTF-8でない場合は変換を試みる）
+                $encoding = mb_detect_encoding($title, ['UTF-8', 'SJIS', 'EUC-JP', 'ASCII'], true);
+                if ($encoding && $encoding !== 'UTF-8') {
+                    $title = mb_convert_encoding($title, 'UTF-8', $encoding);
+                }
+                // HTMLエンティティをデコード（&amp; -> & など）
+                $link['title'] = html_entity_decode($title, ENT_QUOTES, 'UTF-8');
             }
         }
+        // それでも空ならホスト名をフォールバック
         if (empty($link['title'])) {
             $link['title'] = parse_url($link['url'], PHP_URL_HOST);
         }
