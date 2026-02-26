@@ -125,9 +125,12 @@ if (isset($_POST['new_password']) && !empty(trim($_POST['new_password']))) {
     $config_path = __DIR__ . '/config.php';
     $config_content = file_get_contents($config_path);
     // ADMIN_PASSWORD の定義箇所を置換
+    // $2y$... の $ が preg_replace でバックリファレンスとして解釈されるのを防ぐためエスケープ
+    $replacement = "define('ADMIN_PASSWORD', '" . addslashes($new_hash) . "');";
+    $replacement = str_replace('$', '\$', $replacement);
     $config_content = preg_replace(
         "/define\('ADMIN_PASSWORD',\s*'.*?'\);/",
-        "define('ADMIN_PASSWORD', '" . addslashes($new_hash) . "');",
+        $replacement,
         $config_content
     );
     file_put_contents($config_path, $config_content);
