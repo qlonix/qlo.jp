@@ -120,10 +120,10 @@ if (is_dir($uploads_dir)) {
 
             <h3 style="margin-top: 40px;">SNS埋め込み設定</h3>
             <div class="form-group" style="margin-top: 20px;">
-                <label>Instagram 埋め込み用タグ</label>
-                <textarea name="embed_instagram" class="form-control"
-                    placeholder="<blockquote class='instagram-media'>..."><?= htmlspecialchars($data['embeds']['instagram'] ?? '') ?></textarea>
-                <small style="color: #666;">※ Instagramの「埋め込み」で取得したコード（scriptタグ含む）を貼り付けてください。</small>
+                <label>Instagram ユーザーID</label>
+                <input type="text" name="embed_instagram" class="form-control" placeholder="例: qlopics"
+                    value="<?= htmlspecialchars($data['embeds']['instagram'] ?? '') ?>">
+                <small style="color: #666;">※ InstagramのユーザーID（@を除いた名前）を入力してください。自動的にプロフィールが埋め込まれます。</small>
             </div>
 
             <h3 style="margin-top: 40px;">セキュリティ設定</h3>
@@ -225,8 +225,7 @@ if (is_dir($uploads_dir)) {
             // APIへ送信
             const apiFormData = new FormData();
             apiFormData.append('data', JSON.stringify(saveObj));
-
-            const newPassword = formData.get('new_password');
+ const newPassword = formData.get('new_password');
             if (newPassword && newPassword.trim() !== '') {
                 apiFormData.append('new_password', newPassword.trim());
             }
@@ -246,13 +245,13 @@ if (is_dir($uploads_dir)) {
                         const alert = document.getElementById('success-alert');
                         alert.style.display = 'block';
                         setTimeout(() => {
-                            alert.style.display = 'none';
-                            if (newPassword && newPassword.trim() !== '') {
+                           alert.style.display = 'none';
+                           if (newPassword && newPassword.trim() !== '') {
                                 alert('パスワードを変更しました。再ログインしてください。');
                                 window.location.href = 'logout.php';
                             } else {
                                 location.reload();
-                            }
+                           }
                         }, 1000);
                         window.scrollTo(0, 0);
                     } else {

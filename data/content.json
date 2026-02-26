@@ -14,11 +14,11 @@
             "url": "https:\/\/github.com\/qlonix"
         },
         {
-            "title": "はてなブログ",
+            "title": "sudo.hateblo.jp",
             "url": "https:\/\/sudo.hateblo.jp\/"
         }
     ],
     "embeds": {
-        "instagram": "<blockquote class=\"instagram-media\" data-instgrm-permalink=\"https:\/\/www.instagram.com\/qlopics\/\" data-instgrm-version=\"14\"><\/blockquote><script async src=\"\/\/www.instagram.com\/embed.js\"><\/script>"
+        "instagram": "qlopics"
     }
 }

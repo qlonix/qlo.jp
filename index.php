@@ -111,8 +111,12 @@ function get_display_id($url)
 
         <section class="embeds-section">
             <?php if (!empty($data['embeds']['instagram'])): ?>
+                <?php $insta_id = ltrim($data['embeds']['instagram'], '@'); ?>
                 <div class="embed-container instagram-embed">
-                    <?= $data['embeds']['instagram'] ?>
+                    <blockquote class="instagram-media"
+                        data-instgrm-permalink="https://www.instagram.com/<?= htmlspecialchars($insta_id) ?>/"
+                        data-instgrm-version="14"></blockquote>
+                    <script async src="//www.instagram.com/embed.js"></script>
                 </div>
             <?php endif; ?>
         </section>
