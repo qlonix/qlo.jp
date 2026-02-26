@@ -88,7 +88,8 @@ if (is_dir($uploads_dir)) {
             </div>
             <div class="form-group">
                 <label>自己紹介 (改行対応)</label>
-                <textarea name="profile_bio" class="form-control"><?= htmlspecialchars(trim($data['profile']['bio'])) ?></textarea>
+                <textarea name="profile_bio"
+                    class="form-control"><?= htmlspecialchars(trim($data['profile']['bio'])) ?></textarea>
             </div>
 
             <h3 style="margin-top: 40px;">外部リンク設定</h3>
@@ -125,6 +126,13 @@ if (is_dir($uploads_dir)) {
                 <small style="color: #666;">※ Instagramの「埋め込み」で取得したコード（scriptタグ含む）を貼り付けてください。</small>
             </div>
 
+            <h3 style="margin-top: 40px;">セキュリティ設定</h3>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>新しい管理パスワード（変更する場合のみ入力）</label>
+                <input type="password" name="new_password" class="form-control" placeholder="新しいパスワード">
+                <small style="color: #666;">※ 変更すると次回ログイン時から新しいパスワードが必要になります。</small>
+            </div>
+
             <hr style="margin: 40px 0; border: none; border-top: 1px solid #eee;">
 
             <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem; padding: 15px;">変更を保存する</button>
@@ -141,11 +149,11 @@ if (is_dir($uploads_dir)) {
             </div>
             <div class="form-group">
                 <label>タイトル</label>
-                <input type="text" name="link_title[]" class="form-control" placeholder="例: GitHub">
+                <input type="text" name="link_title[]" class="form-control" placeholder="例: GitHub（空欄で自動取得）">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
                 <label>URL</label>
-                <input type="url" name="link_url[]" class="form-control" placeholder="https://...">
+                <input type="text" name="link_url[]" class="form-control url-input" placeholder="example.com">
             </div>
         </div>
     </template>
@@ -163,6 +171,21 @@ if (is_dir($uploads_dir)) {
                 item.parentNode.insertBefore(item.nextElementSibling, item);
             }
         }
+
+        // URLの自動補完ロジック
+        function autocompleteUrl(input) {
+            let val = input.value.trim();
+            if (val && !val.startsWith('http://') && !val.startsWith('https://') && !val.startsWith('/') && !val.startsWith('mailto:')) {
+                input.value = 'https://' + val;
+            }
+        }
+
+        // 既存と新規のURL入力フィールドにイベントを設定
+        document.addEventListener('blur', function (e) {
+            if (e.target && (e.target.name === 'link_url[]' || e.target.id === 'profile_avatar')) {
+                autocompleteUrl(e.target);
+            }
+        }, true);
 
         document.getElementById('add-link-btn').addEventListener('click', function () {
             const template = document.getElementById('link-template');
@@ -191,7 +214,7 @@ if (is_dir($uploads_dir)) {
             const linkUrls = formData.getAll('link_url[]');
 
             for (let i = 0; i < linkTitles.length; i++) {
-                if (linkTitles[i].trim() !== '' || linkUrls[i].trim() !== '') {
+                if (linkUrls[i].trim() !== '') {
                     saveObj.links.push({
                         title: linkTitles[i],
                         url: linkUrls[i]
@@ -202,6 +225,12 @@ if (is_dir($uploads_dir)) {
             // APIへ送信
             const apiFormData = new FormData();
             apiFormData.append('data', JSON.stringify(saveObj));
+
+            const newPassword = formData.get('new_password');
+            if (newPassword && newPassword.trim() !== '') {
+                apiFormData.append('new_password', newPassword.trim());
+            }
+
             const fileInput = document.querySelector('input[name="avatar_file"]');
             if (fileInput.files.length > 0) {
                 apiFormData.append('avatar_file', fileInput.files[0]);
@@ -216,7 +245,15 @@ if (is_dir($uploads_dir)) {
                     if (data.success) {
                         const alert = document.getElementById('success-alert');
                         alert.style.display = 'block';
-                        setTimeout(() => { alert.style.display = 'none'; location.reload(); }, 1000);
+                        setTimeout(() => {
+                            alert.style.display = 'none';
+                            if (newPassword && newPassword.trim() !== '') {
+                                alert('パスワードを変更しました。再ログインしてください。');
+                                window.location.href = 'logout.php';
+                            } else {
+                                location.reload();
+                            }
+                        }, 1000);
                         window.scrollTo(0, 0);
                     } else {
                         alert('保存に失敗しました: ' + (data.error || '不明なエラー'));

@@ -83,6 +83,41 @@ if (file_exists(DATA_FILE)) {
     copy(DATA_FILE, DATA_FILE . '.bak');
 }
 
+// タイトルが空のリンクに対してタイトルを自動取得
+foreach ($data['links'] as &$link) {
+    if (empty(trim($link['title'])) && !empty($link['url'])) {
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 5,
+                'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n"
+            ]
+        ]);
+        $html = @file_get_contents($link['url'], false, $context);
+        if ($html) {
+            if (preg_match('/<title>(.*?)<\/title>/is', $html, $matches)) {
+                $link['title'] = $matches[1];
+            }
+        }
+        if (empty($link['title'])) {
+            $link['title'] = parse_url($link['url'], PHP_URL_HOST);
+        }
+    }
+}
+
+// パスワード変更
+if (isset($_POST['new_password']) && !empty(trim($_POST['new_password']))) {
+    $new_hash = password_hash(trim($_POST['new_password']), PASSWORD_DEFAULT);
+    $config_path = __DIR__ . '/config.php';
+    $config_content = file_get_contents($config_path);
+    // ADMIN_PASSWORD の定義箇所を置換
+    $config_content = preg_replace(
+        "/define\('ADMIN_PASSWORD',\s*'.*?'\);/",
+        "define('ADMIN_PASSWORD', '" . addslashes($new_hash) . "');",
+        $config_content
+    );
+    file_put_contents($config_path, $config_content);
+}
+
 // JSONファイルに書き込み
 $result = file_put_contents(DATA_FILE, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
