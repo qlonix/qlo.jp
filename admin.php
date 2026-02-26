@@ -206,7 +206,8 @@ if (is_dir($uploads_dir)) {
                 },
                 links: [],
                 embeds: {
-                    instagram: formData.get('embed_instagram')
+                    instagram: formData.get('embed_instagram'),
+                    x: formData.get('embed_x')
                 }
             };
 
