@@ -1,0 +1,125 @@
+<?php
+require_once 'config.php';
+
+$data = [
+    'profile' => ['name' => 'Name', 'bio' => '', 'avatar_url' => ''],
+    'links' => [],
+    'embeds' => ['instagram' => '']
+];
+
+if (file_exists(DATA_FILE)) {
+    $json = file_get_contents(DATA_FILE);
+    $parsed = json_decode($json, true);
+    if ($parsed) {
+        $data = array_merge($data, $parsed);
+    }
+}
+
+function get_icon_url($url)
+{
+    if (!$url)
+        return '';
+    $parsed = parse_url($url);
+    $host = $parsed['host'] ?? '';
+    $path = trim($parsed['path'] ?? '', '/');
+
+    if ((strpos($host, 'instagram.com') !== false || strpos($host, 'twitter.com') !== false || strpos($host, 'x.com') !== false || strpos($host, 'github.com') !== false) && !empty($path)) {
+        $username = explode('/', $path)[0];
+        $service = 'favicon';
+        if (strpos($host, 'instagram.com') !== false)
+            $service = 'instagram';
+        elseif (strpos($host, 'twitter.com') !== false || strpos($host, 'x.com') !== false)
+            $service = 'twitter';
+        elseif (strpos($host, 'github.com') !== false)
+            $service = 'github';
+
+        return "https://unavatar.io/{$service}/{$username}?fallback=false";
+    }
+
+    // Default Favicon API
+    return "https://www.google.com/s2/favicons?domain={$host}&sz=128";
+}
+
+function get_display_id($url)
+{
+    if (!$url)
+        return '';
+    $parsed = parse_url($url);
+    $host = $parsed['host'] ?? '';
+    $path = trim($parsed['path'] ?? '', '/');
+    if (empty($path))
+        return '';
+
+    $services = ['instagram.com', 'twitter.com', 'x.com', 'github.com'];
+    foreach ($services as $service) {
+        if (strpos($host, $service) !== false) {
+            $parts = explode('/', $path);
+            return '@' . $parts[0];
+        }
+    }
+    return '';
+}
+?>
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <?= htmlspecialchars($data['profile']['name']) ?>
+    </title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <section class="profile-section">
+            <?php if (!empty($data['profile']['avatar_url'])): ?>
+                <img src="<?= htmlspecialchars($data['profile']['avatar_url']) ?>" alt="Avatar" class="avatar">
+            <?php else: ?>
+                <div class="avatar"></div>
+            <?php endif; ?>
+            <h1 class="name"><?= htmlspecialchars($data['profile']['name']) ?></h1>
+            <p class="bio"><?= nl2br(htmlspecialchars(trim($data['profile']['bio']))) ?></p>
+        </section>
+
+        <?php if (!empty($data['links'])): ?>
+            <section class="links-section">
+                <?php foreach ($data['links'] as $link): ?>
+                    <?php
+                    $icon_url = get_icon_url($link['url']);
+                    $display_id = get_display_id($link['url']);
+                    ?>
+                    <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer"
+                        class="link-button">
+                        <?php if ($icon_url): ?>
+                            <img src="<?= htmlspecialchars($icon_url) ?>" class="link-icon" alt=""
+                                onerror="this.src='https://www.google.com/s2/favicons?domain=<?= parse_url($link['url'], PHP_URL_HOST) ?>&sz=128'; this.onerror=null;">
+                        <?php endif; ?>
+                        <div class="link-text">
+                            <span class="link-title"><?= htmlspecialchars($link['title']) ?></span>
+                            <?php if ($display_id): ?>
+                                <span class="link-id"><?= htmlspecialchars($display_id) ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </section>
+        <?php endif; ?>
+
+        <section class="embeds-section">
+            <?php if (!empty($data['embeds']['instagram'])): ?>
+                <div class="embed-container instagram-embed">
+                    <?= $data['embeds']['instagram'] ?>
+                </div>
+            <?php endif; ?>
+        </section>
+    </div>
+
+    <a href="login.php" class="admin-link">Admin</a>
+
+</body>
+
+</html>

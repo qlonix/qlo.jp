@@ -1,0 +1,20 @@
+{
+    "profile": {
+        "name": "qlo.jp",
+        "bio": "QLOの個人サイトです。\n有益な情報は何もありません。",
+        "avatar_url": "data\/uploads\/avatar_1772123101.jpg"
+    },
+    "links": [
+        {
+            "title": "X",
+            "url": "https:\/\/x.com\/qlo"
+        },
+        {
+            "title": "GitHub",
+            "url": "https:\/\/github.com\/qlonix"
+        }
+    ],
+    "embeds": {
+        "instagram": "<blockquote class=\"instagram-media\" data-instgrm-permalink=\"https:\/\/www.instagram.com\/qlopics\/\" data-instgrm-version=\"14\"><\/blockquote><script async src=\"\/\/www.instagram.com\/embed.js\"><\/script>"
+    }
+}
