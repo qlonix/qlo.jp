@@ -119,6 +119,15 @@ function get_display_id($url)
                     <script async src="//www.instagram.com/embed.js"></script>
                 </div>
             <?php endif; ?>
+            <?php if (!empty($data['embeds']['x'])): ?>
+                <?php $x_id = ltrim($data['embeds']['x'], '@'); ?>
+                <div class="embed-container x-embed">
+                    <a class="twitter-timeline" data-height="600"
+                        href="https://twitter.com/<?= htmlspecialchars($x_id) ?>?ref_src=twsrc%5Etfw">Tweets by
+                        <?= htmlspecialchars($x_id) ?></a>
+                    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                </div>
+            <?php endif; ?>
         </section>
     </div>
 
