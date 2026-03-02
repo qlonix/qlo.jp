@@ -82,12 +82,15 @@ function get_display_id($url)
                     $display_id = get_display_id($link['url']);
                     $icon_url = get_icon_url($link['url'], $link['favicon_url'] ?? null);
                     ?>
-                    <a href="<?= htmlspecialchars($link['url']) ?>" class="link-card" target="_blank">
-                        <img src="<?= htmlspecialchars($icon_url) ?>" class="link-icon" alt="icon">
-                        <span class="link-title"><?= htmlspecialchars($link['title']) ?></span>
-                        <?php if (!empty($display_id)): ?>
-                            <span class="link-id"><?= htmlspecialchars($display_id) ?></span>
-                        <?php endif; ?>
+                    <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer"
+                        class="link-button">
+                        <img src="<?= htmlspecialchars($icon_url) ?>" class="link-icon" alt=""
+                            onerror="this.src='https://www.google.com/s2/favicons?domain=<?= parse_url($link['url'], PHP_URL_HOST) ?>&sz=128'; this.onerror=null;">
+                        <div class="link-text">
+                            <span class="link-title"><?= htmlspecialchars($link['title']) ?></span>
+                            <?php if ($display_id): ?>
+                                <span class="link-id"><?= htmlspecialchars($display_id) ?></span>
+                            <?php endif; ?>
                         </div>
                     </a>
                 <?php endforeach; ?>
