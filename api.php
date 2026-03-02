@@ -78,14 +78,30 @@ if (!is_dir(__DIR__ . '/data')) {
     mkdir(__DIR__ . '/data', 0755, true);
 }
 
+// 既存データの読み込み（Faviconなどの保持用）
+$old_data = [];
+if (file_exists(DATA_FILE)) {
+    $old_data = json_decode(file_get_contents(DATA_FILE), true);
+}
+
 // 念のためのバックアップ
 if (file_exists(DATA_FILE)) {
     copy(DATA_FILE, DATA_FILE . '.bak');
 }
 
-// タイトルが空のリンクに対してタイトルを自動取得
+// タイトルが空、またはFaviconがないリンクに対して自動取得
 foreach ($data['links'] as &$link) {
-    if (empty(trim($link['title'])) && !empty($link['url'])) {
+    // 既存データからFaviconを引き継ぐ（URLが同じ場合）
+    if (isset($old_data['links'])) {
+        foreach ($old_data['links'] as $old_link) {
+            if ($old_link['url'] === $link['url'] && !empty($old_link['favicon_url'])) {
+                $link['favicon_url'] = $old_link['favicon_url'];
+                break;
+            }
+        }
+    }
+
+    if (!empty($link['url']) && (empty(trim($link['title'])) || empty($link['favicon_url']))) {
         $context = stream_context_create([
             'http' => [
                 'timeout' => 10,
@@ -100,19 +116,54 @@ foreach ($data['links'] as &$link) {
         ]);
         $html = @file_get_contents($link['url'], false, $context);
         if ($html) {
-            // 正規表現でタイトルタグを抽出（属性があっても対応）
-            if (preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $matches)) {
-                $title = trim($matches[1]);
-                // 文字コードの補正（UTF-8でない場合は変換を試みる）
-                $encoding = mb_detect_encoding($title, ['UTF-8', 'SJIS', 'EUC-JP', 'ASCII'], true);
-                if ($encoding && $encoding !== 'UTF-8') {
-                    $title = mb_convert_encoding($title, 'UTF-8', $encoding);
+            // --- タイトル取得 ---
+            if (empty(trim($link['title']))) {
+                if (preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $matches)) {
+                    $title = trim($matches[1]);
+                    $encoding = mb_detect_encoding($title, ['UTF-8', 'SJIS', 'EUC-JP', 'ASCII'], true);
+                    if ($encoding && $encoding !== 'UTF-8') {
+                        $title = mb_convert_encoding($title, 'UTF-8', $encoding);
+                    }
+                    $link['title'] = html_entity_decode($title, ENT_QUOTES, 'UTF-8');
                 }
-                // HTMLエンティティをデコード（&amp; -> & など）
-                $link['title'] = html_entity_decode($title, ENT_QUOTES, 'UTF-8');
+            }
+
+            // --- Favicon取得（厳密モード） ---
+            if (empty($link['favicon_url'])) {
+                $favicon = '';
+                // 優先度の高い順に検索
+                $patterns = [
+                    '/<link[^>]+rel=["\'](?:apple-touch-icon(?:-precomposed)?|icon|shortcut icon)["\'][^>]+href=["\'](.*?)["\']/i',
+                    '/<link[^>]+href=["\'](.*?)["\'][^>]+rel=["\'](?:apple-touch-icon(?:-precomposed)?|icon|shortcut icon)["\']/i'
+                ];
+
+                foreach ($patterns as $pattern) {
+                    if (preg_match($pattern, $html, $matches)) {
+                        $favicon = $matches[1];
+                        break;
+                    }
+                }
+
+                if ($favicon) {
+                    // 相対パスを絶対パスに変換
+                    if (strpos($favicon, 'http') !== 0) {
+                        $parsed_url = parse_url($link['url']);
+                        $base = $parsed_url['scheme'] . '://' . $parsed_url['host'];
+                        if (strpos($favicon, '//') === 0) {
+                            $favicon = $parsed_url['scheme'] . ':' . $favicon;
+                        } elseif (strpos($favicon, '/') === 0) {
+                            $favicon = $base . $favicon;
+                        } else {
+                            $path = dirname($parsed_url['path'] ?? '');
+                            $favicon = $base . ($path === '/' ? '' : $path) . '/' . $favicon;
+                        }
+                    }
+                    $link['favicon_url'] = $favicon;
+                }
             }
         }
-        // それでも空ならホスト名をフォールバック
+
+        // タイトルが空ならホスト名をフォールバック
         if (empty($link['title'])) {
             $link['title'] = parse_url($link['url'], PHP_URL_HOST);
         }

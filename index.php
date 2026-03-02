@@ -15,14 +15,17 @@ if (file_exists(DATA_FILE)) {
     }
 }
 
-function get_icon_url($url)
+function get_icon_url($url, $saved_favicon = null)
 {
+    if (!empty($saved_favicon)) {
+        return $saved_favicon;
+    }
     if (!$url)
         return '';
     $parsed = parse_url($url);
     $host = $parsed['host'] ?? '';
 
-    // すべてのサイトで Google Favicon API を使用するように統一
+    // 保存されたアイコンがない場合のフォールバック
     return "https://www.google.com/s2/favicons?domain={$host}&sz=128";
 }
 
@@ -76,20 +79,15 @@ function get_display_id($url)
             <section class="links-section">
                 <?php foreach ($data['links'] as $link): ?>
                     <?php
-                    $icon_url = get_icon_url($link['url']);
                     $display_id = get_display_id($link['url']);
+                    $icon_url = get_icon_url($link['url'], $link['favicon_url'] ?? null);
                     ?>
-                    <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer"
-                        class="link-button">
-                        <?php if ($icon_url): ?>
-                            <img src="<?= htmlspecialchars($icon_url) ?>" class="link-icon" alt=""
-                                onerror="this.src='https://www.google.com/s2/favicons?domain=<?= parse_url($link['url'], PHP_URL_HOST) ?>&sz=128'; this.onerror=null;">
+                    <a href="<?= htmlspecialchars($link['url']) ?>" class="link-card" target="_blank">
+                        <img src="<?= htmlspecialchars($icon_url) ?>" class="link-icon" alt="icon">
+                        <span class="link-title"><?= htmlspecialchars($link['title']) ?></span>
+                        <?php if (!empty($display_id)): ?>
+                            <span class="link-id"><?= htmlspecialchars($display_id) ?></span>
                         <?php endif; ?>
-                        <div class="link-text">
-                            <span class="link-title"><?= htmlspecialchars($link['title']) ?></span>
-                            <?php if ($display_id): ?>
-                                <span class="link-id"><?= htmlspecialchars($display_id) ?></span>
-                            <?php endif; ?>
                         </div>
                     </a>
                 <?php endforeach; ?>
