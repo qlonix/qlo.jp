@@ -21,22 +21,8 @@ function get_icon_url($url)
         return '';
     $parsed = parse_url($url);
     $host = $parsed['host'] ?? '';
-    $path = trim($parsed['path'] ?? '', '/');
 
-    if ((strpos($host, 'instagram.com') !== false || strpos($host, 'twitter.com') !== false || strpos($host, 'x.com') !== false || strpos($host, 'github.com') !== false) && !empty($path)) {
-        $username = explode('/', $path)[0];
-        $service = 'favicon';
-        if (strpos($host, 'instagram.com') !== false)
-            $service = 'instagram';
-        elseif (strpos($host, 'twitter.com') !== false || strpos($host, 'x.com') !== false)
-            $service = 'twitter';
-        elseif (strpos($host, 'github.com') !== false)
-            $service = 'github';
-
-        return "https://unavatar.io/{$service}/{$username}?fallback=false";
-    }
-
-    // Default Favicon API
+    // すべてのサイトで Google Favicon API を使用するように統一
     return "https://www.google.com/s2/favicons?domain={$host}&sz=128";
 }
 
