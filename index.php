@@ -39,7 +39,7 @@ function get_display_id($url)
     if (empty($path))
         return '';
 
-    $services = ['instagram.com', 'twitter.com', 'x.com', 'github.com', 'mixi.social'];
+    $services = ['instagram.com', 'twitter.com', 'x.com', 'github.com', 'mixi.social', 'misskey.io'];
     foreach ($services as $service) {
         if (strpos($host, $service) !== false) {
             $parts = explode('/', $path);
