@@ -40,7 +40,8 @@ function get_display_id($url)
     foreach ($services as $service) {
         if (strpos($host, $service) !== false) {
             $parts = explode('/', $path);
-            return '@' . $parts[0];
+            $username = ltrim($parts[0], '@');
+            return '@' . $username;
         }
     }
     return '';
